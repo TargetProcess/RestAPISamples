@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
 using System.Xml.Serialization;
 
 namespace TpRestExample
@@ -16,24 +12,27 @@ namespace TpRestExample
 
 		static void Main()
 		{
-			var client = new WebClient
-				{
-					Credentials = new NetworkCredential("admin", "admin"), // Use Basic Authentication
-					//Proxy = new WebProxy("fiddler-proxy",8888)
-				};
+			ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12;
 
-			var userStoryCollection = DownloadUserStories(client);
-
-			foreach (var story in userStoryCollection.UserStories)
+			using (var client = new WebClient
 			{
-				Console.WriteLine("{0} {1} {2}",story.Id, story.Name, story.Project);
+				Credentials = new NetworkCredential("admin", "admin"), // Use Basic Authentication
+				//Proxy = new WebProxy("fiddler-proxy",8888)
+			})
+			{
+				var userStoryCollection = DownloadUserStories(client);
+
+				foreach (var story in userStoryCollection.UserStories)
+				{
+					Console.WriteLine("{0} {1} {2}", story.Id, story.Name, story.Project);
+				}
+
+				var firstStory = userStoryCollection.UserStories.First();
+				firstStory.Name = "New name";
+
+				var result = UpdateUserStory(firstStory, client);
+				Console.WriteLine(result);
 			}
-
-			var firstStory = userStoryCollection.UserStories.First();
-			firstStory.Name = "New name";
-
-			var result = UpdateUserStory(firstStory, client);
-			Console.WriteLine(result);
 		}
 
 		private static string UpdateUserStory(UserStory firstStory, WebClient client)
