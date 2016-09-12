@@ -1,5 +1,6 @@
 ﻿using Microsoft.Web.Services3;
 using System.Configuration;
+using System.Net;
 using Tp.Service.Proxies;
 
 namespace UploadAttachment
@@ -12,6 +13,8 @@ namespace UploadAttachment
 
         public ServiceManager()
         {
+            ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; 
+
             path = ConfigurationManager.AppSettings["TargetProcessPath"];
             login = ConfigurationManager.AppSettings["AdminLogin"];
             password = ConfigurationManager.AppSettings["AdminPassword"];
