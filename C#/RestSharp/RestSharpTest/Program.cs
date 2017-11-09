@@ -2,59 +2,62 @@
 using RestSharp.Authenticators;
 using RestSharpTest.Models;
 using System;
-using System.IO;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using System.Net;
+using System.Threading.Tasks;
 
 namespace RestSharpTest
 {
     class Program
     {
-        static void Main(string[] args)
+        // ** Change connection strings accordingly
+        const string ChromeExe = @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe";
+        private const string DomainUrl = "http://local.tsarevich.tp.com/";
+
+        static void Main()
         {
-            var client = new RestClient("https://julia.tpondemand.com/");
-            client.Authenticator = new HttpBasicAuthenticator("admin", "admin");
+            var client = new RestClient(DomainUrl)
+            {
+                Authenticator = new HttpBasicAuthenticator("admin", "admin")
+            };
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
-            var request = CreateRequest(client);
-            var file = new AttachmentFile()
-            {
-                FileName = "landscape.jpg",
-                ContentType = "image/jpg",
-                Content = new MemoryStream(File.ReadAllBytes(@"c:\landscape.jpg"))
-            };
-            UploadAttachment(client, file, request.Id.Value);
+            var tasks = new List<Task<IRestResponse<Request>>>(34);
+            tasks.AddRange(Enumerable.Range(1, 48).Select(no => CreateRequest(client, no)));
+
+            var wasCreated = Task.WaitAll(tasks.Select(t => (Task)t).ToArray(), new TimeSpan(0, 2, 0));
+
+            Console.WriteLine(wasCreated);
         }
 
-        private static Request CreateRequest(RestClient client)
+        private static Task<IRestResponse<Request>> CreateRequest(RestClient client, int no)
         {
             var restRequest = new RestRequest("/api/v1/requests", Method.POST);
             restRequest.AddHeader("Content-Type", "application/json; charset=utf-8");
+            restRequest.AddQueryParameter("access_token",
+                "MTpKVFlEZmVjdW9KUWhOOWxGOFdjR0ZlUmYwWldYRUlJa0lZL0JXZE5HV1g0PQ==");
 
-            var request = new Request();
-            request.Name = "test";
-            request.Description = "test description";
-            request.Project = new Project { Id = 1524 };
+            var request = new Request
+            {
+                Name = $"test_{no}",
+                Description = "test description",
+                Project = new Project {Id = 1087}
+            };
 
             restRequest.AddBody(request);
-            var response = client.Execute<Request>(restRequest);
-            Console.WriteLine(response.StatusCode);
-            Console.WriteLine(response.Content);
+            return client.ExecuteTaskAsync<Request>(restRequest)
+                .ContinueWith(createRequest =>
+                {
+                    //if (createRequest.Result.StatusCode == HttpStatusCode.Created)
+                    //{
+                    //    Process.Start(ChromeExe,
+                    //        $"{DomainUrl}entity/{createRequest.Result.Data.Id}");
+                    //}
 
-            return response.Data;
-        }
-
-        private static Attachment UploadAttachment(RestClient client, AttachmentFile file, int id)
-        {
-            var restRequest = new RestRequest("UploadFile.ashx", Method.POST);
-            restRequest.AddHeader("Content-Type", "multipart/form-data");
-            restRequest.AddFile("attachment", file.Content.ToArray(), file.FileName, file.ContentType);
-            restRequest.AddParameter("generalId", id);
-
-            var response = client.Execute<Attachment>(restRequest);
-            Console.WriteLine(response.StatusCode);
-            Console.WriteLine(response.Content);
-
-            return response.Data;
+                    return createRequest.Result;
+                });
         }
     }
 }
