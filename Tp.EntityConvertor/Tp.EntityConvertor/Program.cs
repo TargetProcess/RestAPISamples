@@ -51,7 +51,7 @@ namespace Tp.EntityConvertor
                 {
                     var convertDto = new ConvertGeneralToTypeDto
                     {
-                        EntityTypeId = args.EntityTypeId,
+                        EntityTypeId = args.EntityKindId,
                         GeneralId = generalIdToConvert
                     };
 

@@ -29,19 +29,19 @@ namespace Tp.EntityConvertor
         /// </summary>
         [CommandLineArgument(new[] { "-time", "--timeout" },
             description: "Time to wait for conversion to complete (in HH:mm:ss[.FFFF] format).",
-            sampleValue: "0:5:30.1000")]
+            sampleValue: "0:5:30")]
         public TimeSpan WaitTimeout { get; set; }
 
         /// <summary>
-        /// Entity type id to convert entity to.
+        /// Entity kind id to convert entity to.
         /// </summary>
-        [CommandLineArgument(new[] { "-etid", "--entity_type_id" },
-            description: "Entity type id to convert general to.",
+        [CommandLineArgument(new[] { "-ekid", "--entity_kind_id" },
+            description: "Entity kind id to convert general to.",
             sampleValue: "12")]
-        public int EntityTypeId { get; set; }
+        public int EntityKindId { get; set; }
 
         /// <summary>
-        /// Ids of generals to convert to type with id <see cref="EntityTypeId"/>.
+        /// Ids of generals to convert to type with entity kind id <see cref="EntityKindId"/>.
         /// </summary>
         [CommandLineArgument(new[] { "-ids", "--general_ids" },
             description: "Separated by comma array of general's ids to convert.",
