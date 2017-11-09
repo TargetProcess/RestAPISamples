@@ -123,7 +123,7 @@ namespace Tp.EntityConvertor
 
             try
             {
-                if (argType == typeof(string) || !argType.IsArray)
+                if (!argType.IsArray)
                 {
                     ArgsPropertySettersMap.GetValue(argType)
                         .Do(argsSetter => argsSetter(argPropertyInfo, arg, typedArgs),
