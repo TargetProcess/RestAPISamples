@@ -30,12 +30,12 @@ namespace Tp.EntityConvertor
 
         private static int PerformConversionGeneralToType([NotNull] EntityConvertorArgs args)
         {
-            // Targetprocess enforce TLS 1.2 On-Demand, so add this to supported security protocols.
+            // Targetprocess enforces TLS 1.2 On-Demand, so add this to supported security protocols.
             // https://www.targetprocess.com/blog/2016/03/targetprocess-will-start-enforcing-tls-1-2-encryption/
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
-            // For .NET 4.6.2 or lower, .NET Core 1.x, and .NET Standard 1.x you need to install the NuGet package System.ValueTuple.
-            // When you want to use C# 7.0 value tuple.
+            // When you want to use C# 7.0 value tuple, for .NET 4.6.2 or lower, .NET Core 1.x, and .NET Standard 1.x
+            // you need to install the NuGet package System.ValueTuple.
             var conversions = new List<(int GeneralId, Task<HttpResponseMessage> ConversionTask)>(args.GeneralIdsToConvert.Count());
             var serializerSettings = new JsonSerializerSettings
             {
@@ -143,7 +143,6 @@ namespace Tp.EntityConvertor
 
             Console.WriteLine();
             Console.WriteLine("Samples: ");
-
             Console.WriteLine($"{programName} {string.Join(" ", EntityConvertorArgsParser.SupportedArgs.Value.Select(v => $"{v.Attribute.Keys.First()} {v.Attribute.SampleValue}"))}");
             Console.WriteLine($"{programName} {string.Join(" ", EntityConvertorArgsParser.SupportedArgs.Value.Select(v => $"{v.Attribute.Keys.Last()} {v.Attribute.SampleValue}"))}");
         }
