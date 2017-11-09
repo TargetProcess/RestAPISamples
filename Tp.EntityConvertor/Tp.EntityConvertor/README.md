@@ -12,7 +12,9 @@ where `args`:
 * -ids, --general_ids     Separated by comma array of general's ids to convert.
 
 Samples:
+
 *Tp.EntityConvertor.exe -u https://md5.tpondemand.com -t MSAd1j2s31a54dk567fkidsa5iksa5l67asdfll56f7asdvcrfsadfla567sdfsakl576df5asd5fmaa== -time 0:5:30 -ekid 47 -ids 1599,1600,1683*
+
 *Tp.EntityConvertor.exe --instance_url https://md5.tpondemand.com --access_token MSAd1j2s31a54dk567fkidsa5iksa5l67asdfll56f7asdvcrfsadfla567sdfsakl576df5asd5fmaa== --timeout 0:5:30 --entity_kind_id 12 --general_ids 123,451,898*
 
 Some Entity Kind Ids (ekid, entity_kind_id):
