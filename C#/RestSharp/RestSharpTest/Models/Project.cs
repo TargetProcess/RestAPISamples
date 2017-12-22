@@ -1,10 +1,6 @@
-﻿using System;
-
-namespace RestSharpTest.Models
+﻿namespace RestSharpTest.Models
 {
-    public class Project
+    public class Project : ResourceBase
     {
-        public int Id { get; set; }
-        public string Name { get; set; }
     }
 }

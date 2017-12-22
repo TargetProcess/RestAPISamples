@@ -2,9 +2,7 @@
 using RestSharp.Authenticators;
 using RestSharpTest.Models;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
+using System.IO;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -12,52 +10,67 @@ namespace RestSharpTest
 {
     class Program
     {
-        // ** Change connection strings accordingly
-        const string ChromeExe = @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe";
-        private const string DomainUrl = "http://local.tsarevich.tp.com/";
-
-        static void Main()
+        // Requires C# version 7.1 or later.
+        static async Task Main()
         {
-            var client = new RestClient(DomainUrl)
-            {
-                Authenticator = new HttpBasicAuthenticator("admin", "admin")
-            };
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
-            var tasks = new List<Task<IRestResponse<Request>>>(34);
-            tasks.AddRange(Enumerable.Range(1, 48).Select(no => CreateRequest(client, no)));
+            var restRequest = CreateRequest();
+            var client = new RestClient("https://md5.tpondemand.com/")
+            {
+                // See https://dev.targetprocess.com/docs/authentication for details.
+                Authenticator = new HttpBasicAuthenticator("admin", "admin")
+            };
 
-            var wasCreated = Task.WaitAll(tasks.Select(t => (Task)t).ToArray(), new TimeSpan(0, 2, 0));
+            var restResponse = await client.ExecutePostTaskAsync<Request>(restRequest);
+            Console.WriteLine($"Request creation status code: {restResponse.StatusCode}");
+            Console.WriteLine($"Request creation content: {restResponse.Content}");
 
-            Console.WriteLine(wasCreated);
+            var createdRequest = restResponse.Data;
+            Console.WriteLine($"Request creation data: {createdRequest}");
+
+            var file = new AttachmentFile
+            {
+                FileName = "landscape.jpg",
+                ContentType = "image/jpg",
+                Content = new MemoryStream(File.ReadAllBytes(@"c:\landscape.jpg"))
+            };
+
+            var attachmentResponse = await UploadAttachment(client, file, createdRequest.Id ??
+                throw new Exception("Reponse for Request creation has no Id field."));
+
+            Console.WriteLine($"Attachment upload status code: {attachmentResponse.StatusCode}");
+            Console.WriteLine($"Attachment upload content: {attachmentResponse.Content}");
+
+            var uploadedAttachment = restResponse.Data;
+            Console.WriteLine($"Attachment upload data: {uploadedAttachment}");
         }
 
-        private static Task<IRestResponse<Request>> CreateRequest(RestClient client, int no)
+        private static RestRequest CreateRequest()
         {
+            // See https://md5.tpondemand.com/api/v1/Index/meta for details.
             var restRequest = new RestRequest("/api/v1/requests", Method.POST);
             restRequest.AddHeader("Content-Type", "application/json; charset=utf-8");
-            restRequest.AddQueryParameter("access_token",
-                "MTpKVFlEZmVjdW9KUWhOOWxGOFdjR0ZlUmYwWldYRUlJa0lZL0JXZE5HV1g0PQ==");
 
             var request = new Request
             {
-                Name = $"test_{no}",
-                Description = "test description",
-                Project = new Project {Id = 1087}
+                Name = "Test Request created from API/v1 call",
+                Description = "Test Request Description",
+                Project = new Project {Id = 1584}
             };
 
             restRequest.AddBody(request);
-            return client.ExecuteTaskAsync<Request>(restRequest)
-                .ContinueWith(createRequest =>
-                {
-                    //if (createRequest.Result.StatusCode == HttpStatusCode.Created)
-                    //{
-                    //    Process.Start(ChromeExe,
-                    //        $"{DomainUrl}entity/{createRequest.Result.Data.Id}");
-                    //}
+            return restRequest;
+        }
 
-                    return createRequest.Result;
-                });
+        private static Task<IRestResponse<Attachment>> UploadAttachment(IRestClient client, AttachmentFile file, int id)
+        {
+            var restRequest = new RestRequest("UploadFile.ashx", Method.POST);
+            restRequest.AddHeader("Content-Type", "multipart/form-data");
+            restRequest.AddFile("attachment", file.Content.ToArray(), file.FileName, file.ContentType);
+            restRequest.AddParameter("generalId", id);
+
+            return client.ExecutePostTaskAsync<Attachment>(restRequest);
         }
     }
 }
