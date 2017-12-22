@@ -15,18 +15,17 @@ namespace RestSharpTest
         {
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
-            var restRequest = CreateRequest();
             var client = new RestClient("https://md5.tpondemand.com/")
             {
                 // See https://dev.targetprocess.com/docs/authentication for details.
                 Authenticator = new HttpBasicAuthenticator("admin", "admin")
             };
+            var createRequestResponse = await CreateRequest(client);
 
-            var restResponse = await client.ExecutePostTaskAsync<Request>(restRequest);
-            Console.WriteLine($"Request creation status code: {restResponse.StatusCode}");
-            Console.WriteLine($"Request creation content: {restResponse.Content}");
+            Console.WriteLine($"Request creation status code: {createRequestResponse.StatusCode}");
+            Console.WriteLine($"Request creation content: {createRequestResponse.Content}");
 
-            var createdRequest = restResponse.Data;
+            var createdRequest = createRequestResponse.Data;
             Console.WriteLine($"Request creation data: {createdRequest}");
 
             var file = new AttachmentFile
@@ -36,17 +35,17 @@ namespace RestSharpTest
                 Content = new MemoryStream(File.ReadAllBytes(@"c:\landscape.jpg"))
             };
 
-            var attachmentResponse = await UploadAttachment(client, file, createdRequest.Id ??
+            var uploadAttachmentResponse = await UploadAttachment(client, file, createdRequest.Id ??
                 throw new Exception("Reponse for Request creation has no Id field."));
 
-            Console.WriteLine($"Attachment upload status code: {attachmentResponse.StatusCode}");
-            Console.WriteLine($"Attachment upload content: {attachmentResponse.Content}");
+            Console.WriteLine($"Attachment upload status code: {uploadAttachmentResponse.StatusCode}");
+            Console.WriteLine($"Attachment upload content: {uploadAttachmentResponse.Content}");
 
-            var uploadedAttachment = restResponse.Data;
+            var uploadedAttachment = createRequestResponse.Data;
             Console.WriteLine($"Attachment upload data: {uploadedAttachment}");
         }
 
-        private static RestRequest CreateRequest()
+        private static Task<IRestResponse<Request>> CreateRequest(IRestClient client)
         {
             // See https://md5.tpondemand.com/api/v1/Index/meta for details.
             var restRequest = new RestRequest("/api/v1/requests", Method.POST);
@@ -60,7 +59,7 @@ namespace RestSharpTest
             };
 
             restRequest.AddBody(request);
-            return restRequest;
+            return client.ExecutePostTaskAsync<Request>(restRequest);
         }
 
         private static Task<IRestResponse<Attachment>> UploadAttachment(IRestClient client, AttachmentFile file, int id)
