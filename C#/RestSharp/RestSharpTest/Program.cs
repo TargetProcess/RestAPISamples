@@ -1,75 +1,59 @@
-﻿using RestSharp;
+using RestSharp;
 using RestSharp.Authenticators;
 using RestSharpTest.Models;
 using System;
 using System.IO;
 using System.Net;
-using System.Threading.Tasks;
-
 namespace RestSharpTest
 {
     class Program
     {
-        // Requires C# version 7.1 or later.
-        static async Task Main()
+        static void Main()
         {
+            var client = new RestClient("https://restapi.tpondemand.com/");
             ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls11;
 
-            var client = new RestClient("https://md5.tpondemand.com/")
+            //client.Authenticator = new HttpBasicAuthenticator("John", "123"); //basic authentication
+            //var token = "?token=Njo4OTIyQzkzN0M5NEY3NzNENDIyNTM2RDU3MTMwMTMwOA=="; //token
+            var token = "?access_token=NjowTGZHR1AwWGV6VkJ3VVFvcGU5RHF0R09MNkJ2Y1RnckNQVnRrQjYxYUdRPQ=="; //access_token
+            //more about authentication at https://dev.targetprocess.com/docs/authentication
+
+            var request = CreateRequest(client, token);
+            var file = new AttachmentFile()
             {
-                // See https://dev.targetprocess.com/docs/authentication for details.
-                Authenticator = new HttpBasicAuthenticator("admin", "admin")
-            };
-            var createRequestResponse = await CreateRequest(client);
-
-            Console.WriteLine($"Request creation status code: {createRequestResponse.StatusCode}");
-            Console.WriteLine($"Request creation content: {createRequestResponse.Content}");
-
-            var createdRequest = createRequestResponse.Data;
-            Console.WriteLine($"Request creation data: {createdRequest}");
-
-            var file = new AttachmentFile
-            {
-                FileName = "landscape.jpg",
-                ContentType = "image/jpg",
-                Content = new MemoryStream(File.ReadAllBytes(@"c:\landscape.jpg"))
+                FileName = "download.png",
+                ContentType = "image/png",
+                Content = new MemoryStream(File.ReadAllBytes(@"c:\Work\download.png"))
             };
 
-            var uploadAttachmentResponse = await UploadAttachment(client, file, createdRequest.Id ??
-                throw new Exception("Reponse for Request creation has no Id field."));
-
-            Console.WriteLine($"Attachment upload status code: {uploadAttachmentResponse.StatusCode}");
-            Console.WriteLine($"Attachment upload content: {uploadAttachmentResponse.Content}");
-
-            var uploadedAttachment = createRequestResponse.Data;
-            Console.WriteLine($"Attachment upload data: {uploadedAttachment}");
+            UploadAttachment(client, token, file, request.Id.Value);
         }
 
-        private static Task<IRestResponse<Request>> CreateRequest(IRestClient client)
+        private static Request CreateRequest(RestClient client, string token)
         {
-            // See https://md5.tpondemand.com/api/v1/Index/meta for details.
-            var restRequest = new RestRequest("/api/v1/requests", Method.POST);
+            var restRequest = new RestRequest("/api/v1/requests" + token, Method.POST);
             restRequest.AddHeader("Content-Type", "application/json; charset=utf-8");
-
-            var request = new Request
-            {
-                Name = "Test Request created from API/v1 call",
-                Description = "Test Request Description",
-                Project = new Project {Id = 1584}
-            };
-
+            var request = new Request();
+            request.Name = "New request";
+            request.Description = "test description";
+            request.Project = new Project { Id = 13 };
             restRequest.AddBody(request);
-            return client.ExecutePostTaskAsync<Request>(restRequest);
+            var response = client.Execute<Request>(restRequest);
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine(response.Content);
+            return response.Data;
         }
 
-        private static Task<IRestResponse<Attachment>> UploadAttachment(IRestClient client, AttachmentFile file, int id)
+        private static Attachment UploadAttachment(RestClient client, string token, AttachmentFile file, int id)
         {
-            var restRequest = new RestRequest("UploadFile.ashx", Method.POST);
+            var restRequest = new RestRequest("UploadFile.ashx" + token, Method.POST);
             restRequest.AddHeader("Content-Type", "multipart/form-data");
             restRequest.AddFile("attachment", file.Content.ToArray(), file.FileName, file.ContentType);
             restRequest.AddParameter("generalId", id);
-
-            return client.ExecutePostTaskAsync<Attachment>(restRequest);
+            var response = client.Execute<Attachment>(restRequest);
+            Console.WriteLine(response.StatusCode);
+            Console.WriteLine(response.Content);
+            return response.Data;
         }
     }
 }
