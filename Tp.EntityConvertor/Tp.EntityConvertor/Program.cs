@@ -68,7 +68,7 @@ namespace Tp.EntityConvertor
                     bool areAllConversionsDone = Task.WaitAll(conversions.Select(conversion => conversion.ConversionTask).ToArray<Task>(), waitTimeout);
                     if (!areAllConversionsDone)
                     {
-                        throw new TimeoutException($"Conversion is not completed in {waitTimeout}, ending coversion.");
+                        throw new TimeoutException($"Conversion is not completed in {waitTimeout}, ending conversion.");
                     }
 
                 }
