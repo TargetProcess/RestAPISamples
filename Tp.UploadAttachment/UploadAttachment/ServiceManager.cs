@@ -7,28 +7,28 @@ namespace UploadAttachment
 {
     public class ServiceManager
     {
-        private readonly string path;
-        private readonly string login;
-        private readonly string password;
+        private readonly string _path;
+        private readonly string _login;
+        private readonly string _password;
 
         public ServiceManager()
         {
             ServicePointManager.SecurityProtocol |= SecurityProtocolType.Tls12; 
 
-            path = ConfigurationManager.AppSettings["TargetProcessPath"];
-            login = ConfigurationManager.AppSettings["AdminLogin"];
-            password = ConfigurationManager.AppSettings["AdminPassword"];
+            _path = ConfigurationManager.AppSettings["TargetProcessPath"];
+            _login = ConfigurationManager.AppSettings["AdminLogin"];
+            _password = ConfigurationManager.AppSettings["AdminPassword"];
         }
 
         public T GetService<T>() where T : WebServicesClientProtocol, new()
         {
-            var serviceWse = new T
+            var clientProto = new T
             {
-                Url = path + "/Services/" + typeof(T).Name + ".asmx"
+                Url = $"{_path}/Services/{typeof(T).Name}.asmx"
             };
 
-            CredentialInitializer.InitCredentials(serviceWse, false, login, password);
-            return serviceWse;
+            CredentialInitializer.InitCredentials(clientProto, false, _login, _password);
+            return clientProto;
         }
     }
 }
