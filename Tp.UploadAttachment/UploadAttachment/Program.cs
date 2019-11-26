@@ -52,7 +52,7 @@ namespace UploadAttachment
             }
             sw.Stop();
             
-            Console.WriteLine(sw.ElapsedMilliseconds);
+            Console.WriteLine("Attachment uploaded in {0} ms.", sw.ElapsedMilliseconds);
         }
 
         private static string UploadAttachment(FileAttachment attachment, int chunkSizeInBytes)
