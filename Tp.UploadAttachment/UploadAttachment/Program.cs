@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Configuration;
+using System.Diagnostics;
 using System.IO;
 using Tp.AttachmentServiceProxy;
 using Tp.FileServiceProxy;
@@ -32,7 +33,8 @@ namespace UploadAttachment
 
         private static void AddAttachmentToRequest(FileAttachment attachment, int requestId)
         {
-            var fileName = UploadAttachment(attachment, 64 * 1024);
+            var sw = Stopwatch.StartNew();
+            var fileName = UploadAttachment(attachment, 128 * 1024);
 
             using (var requestSvc = ServiceManager.GetService<RequestService>())
             {
@@ -48,6 +50,9 @@ namespace UploadAttachment
                     attachSvc.Update(attachmentDto);
                 }
             }
+            sw.Stop();
+            
+            Console.WriteLine(sw.ElapsedMilliseconds);
         }
 
         private static string UploadAttachment(FileAttachment attachment, int chunkSizeInBytes)
