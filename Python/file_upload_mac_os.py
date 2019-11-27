@@ -7,7 +7,7 @@ token = 'NjplaXdQeTJDOHVITFBta0QyME85QlhEOWpwTGdPM2V6VjIyelZlZ0NKWG1RPQ=='
 params = {'access_token':token}
 data = {'generalid':'34'}
 files = {'file':('qwe.png', f, "multipart/form-data")}
-r = requests.post(url, params=params, files = files, data = data)
+r = requests.post(url, params = params, files = files, data = data)
 print(r.text)
 print(data)
 print(r.headers)
